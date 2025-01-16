@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Explanation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .result-section {
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .result-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .result-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .prediction-info, .lime-grad-info {
+            margin-top: 40px;
+        }
+        .prediction-info p, .lime-grad-info p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        .img-fluid {
+            border-radius: 8px;
+        }
+        .grad-cam-image, .lime-image {
+            max-width: 100%;
+            height: 450px;
+            object-fit: contain;
+        }
+        .grad-cam-header, .lime-header {
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .explanation {
+            font-size: 1.1rem;
+            margin-top: 20px;
+            padding-left: 15px;
+        }
+        .explanation ul {
+            list-style-type: disc;
+        }
+        .explanation li {
+            margin-bottom: 10px;
+        }
+        /* New Styles for centering and layout adjustments */
+        .centered-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+        }
+        .image-container {
+            width: 45%;
+            margin-right: 20px;
+        }
+        .explanation-container {
+            width: 45%;
+            margin-left: 20px;
+        }
+        @media (max-width: 768px) {
+            .centered-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            .image-container, .explanation-container {
+                width: 100%;
+                margin-right: 0;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4 text-center text-primary">AI Model Explanation</h1>
+        
+        <!-- Form for uploading image -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form action="/" method="POST" enctype="multipart/form-data" class="shadow-sm p-4 rounded">
+                    <div class="form-group">
+                        <label for="file">Upload Image</label>
+                        <input type="file" class="form-control-file" id="file" name="file" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        {% if uploaded_image %}
+        <div class="result-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3 class="result-title">Uploaded Image</h3>
+                    <!-- Display uploaded image -->
+                    <img src="{{ uploaded_image }}" class="img-fluid" alt="Uploaded Image">
+                </div>
+                <div class="col-md-6">
+                    <h3 class="result-title">Prediction</h3>
+                    <div class="prediction-info">
+                        <p><strong>Predicted Class:</strong> {{ predicted_class }}</p>
+                        <p><strong>Prediction Probability:</strong> {{ predicted_prob }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Centered Section for Grad-CAM and LIME -->
+            <div class="centered-section">
+                <!-- Grad-CAM Visualization -->
+                <div class="image-container">
+                    <h4 class="grad-cam-header">Grad-CAM Visualization</h4>
+                    <img src="{{ grad_cam_image }}" class="grad-cam-image img-fluid" alt="Grad-CAM Visualization">
+                    <!-- Grad-CAM Explanation -->
+                    <div class="explanation">
+                        <h4><strong>Interpretting Grad-CAM:</strong></h4>
+                        <ul>
+                            <li>Grad-CAM highlights the areas that the model focuses on for its decision.</li>
+                            <li>Hotter regions (in red/yellow) indicate higher importance for classification.</li>
+                            <li>It provides insight into which parts of the image influence the prediction.</li>
+                            <li>Helps in understanding model's attention to specific features (e.g., objects, textures).</li>
+                            <li>Useful for model transparency and trust-building in decision-making.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- LIME Explanation -->
+                <div class="image-container">
+                    <h4 class="lime-header">LIME Explanation</h4>
+                    <img src="{{ lime_image }}" class="lime-image img-fluid" alt="LIME Explanation">
+                    <!-- LIME Explanation -->
+                    <div class="explanation">
+                        <h4><strong>Interpretting LIME:</strong></h4>
+                        <ul>
+                            <li>LIME shows which features of the image are most important for the model's decision.</li>
+                            <li>The overlaid boundaries indicate which parts of the image are influential.</li>
+                            <li>Regions marked in yellow/green are the most important features contributing to the prediction.</li>
+                            <li>LIME helps visualize model behavior in a way that is understandable for humans.</li>
+                            <li>Ideal for verifying model fairness and explainability in high-stakes decisions.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.5/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
